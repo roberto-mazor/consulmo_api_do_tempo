@@ -11,45 +11,24 @@ app.use(express.json());
 app.get('/clima', async (req, res) => {
     try {
         const { lat, lon } = req.query;
+        console.log(`--- Requisição recebida para Lat: ${lat}, Lon: ${lon} ---`);
 
-        // LOG 1: Verificar o que chegou do frontend
-        console.log(`--- Nova Requisição ---`);
-        console.log(`Lat recebida: ${lat}`);
-        console.log(`Lon recebida: ${lon}`);
-
-        if (!lat || !lon) {
-            return res.status(400).json({ error: "Latitude ou Longitude faltando" });
-        }
-
-        // Construindo a URL com crases (template literals)
-        // No seu server.js, dentro da rota /clima:
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;        
-        // LOG 2: Verificar a URL final antes de disparar
-        console.log(`URL de destino: ${url}`);
-
+        // URL COMPLETA - Certifique-se de que TODAS estas palavras estão aí:
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
         const response = await axios.get(url);
-        
-        // Se chegou aqui, deu certo
-        console.log("Sucesso: Dados recebidos da Open-Meteo");
+        console.log("Dados obtidos com sucesso da API externa!");
         res.json(response.data);
 
     } catch (error) {
-        // LOG 3: O erro detalhado
-        console.error("!!! ERRO NO BACKEND !!!");
+        // ESSA PARTE É VITAL: Olhe o terminal do VS Code para ler o que aparecer aqui
+        console.error("!!! ERRO NO SERVER.JS !!!");
+        console.error("Causa:", error.message);
         
         if (error.response) {
-            // A API respondeu, mas com erro (ex: coordenadas inválidas)
-            console.error("Status da API:", error.response.status);
-            console.error("Mensagem da API:", error.response.data);
-        } else {
-            // Erro de rede ou erro no código (ex: variável errada)
-            console.error("Mensagem de erro:", error.message);
+            console.error("Detalhes da API:", error.response.data);
         }
 
-        res.status(500).json({ 
-            error: "Falha interna", 
-            message: error.message 
-        });
+        res.status(500).json({ error: "Erro interno no servidor Node" });
     }
 });
 
